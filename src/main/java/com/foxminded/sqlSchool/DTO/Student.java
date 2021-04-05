@@ -9,6 +9,12 @@ public class Student {
     public Student() {
     }
 
+    public Student(String firstName, String secondName) {
+        this.groupId = groupId;
+        this.firstName = firstName;
+        this.secondName = secondName;
+    }
+
     public Student(int groupId, String firstName, String secondName) {
         this.groupId = groupId;
         this.firstName = firstName;
