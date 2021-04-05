@@ -13,7 +13,6 @@ import java.util.Optional;
 
 public class GroupDao implements GenericDao<Group>{
     private static final String INSERT_GROUP = "INSERT INTO groups" + " (GROUP_NAME) VALUES (?);";
-    private static final String FIND_GROUP_BY_NAME = "SELECT GROUP_ID, GROUP_NAME FROM groups WHERE GROUP_NAME = ?";
     private static final String FIND_ALL_GROUPS = "SELECT * FROM groups";
 
     @Override
@@ -40,22 +39,6 @@ public class GroupDao implements GenericDao<Group>{
         }
 
         return groups;
-    }
-
-    public Group findGroupByName(String groupName) { /////////fix!!!!!!!!!!!!
-        Group group = null;
-        try (Connection connection = ConnectionBuilder.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(FIND_GROUP_BY_NAME);) {
-            preparedStatement.setString(1, groupName);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                group = new Group(resultSet.getInt(1), resultSet.getString(2));
-            }
-        } catch (SQLException ex) {
-            System.out.println("+++++++++" + ex.getLocalizedMessage());
-        }
-        System.out.println(group.getGroupName());
-        return group;
     }
 
     @Override
