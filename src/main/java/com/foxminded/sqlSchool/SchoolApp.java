@@ -26,7 +26,7 @@ public class SchoolApp {
         TestDataGenerator testDataGenerator = TestDataGenerator.getInstance();
         TestDataLoader testDataLoader = new TestDataLoader(testDataGenerator);
         testDataLoader.loadTestData();
-        ApplicationMenu.showMenu();
+        ApplicationMenu.callApplicationMenu();
 
 
     }

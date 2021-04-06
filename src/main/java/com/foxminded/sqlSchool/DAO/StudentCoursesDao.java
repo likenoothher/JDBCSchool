@@ -43,25 +43,6 @@ public class StudentCoursesDao implements GenericDao<StudentCourse> {
         return Optional.empty();
     }
 
-
-    public List<Integer> getStudentsCoursesIds(int id) {
-        List<Integer> studentCourses = new ArrayList<>();
-        try (Connection connection = ConnectionBuilder.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(FIND_COURSE_STUDENT_BOND_BY_STUDENT_ID)) {
-
-            preparedStatement.setInt(1, id);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()) {
-                studentCourses.add(resultSet.getInt("COURSE_ID"));
-            }
-            resultSet.close();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error getting student from the database ", e);
-        }
-        return studentCourses;
-    }
-
     @Override
     public List<StudentCourse> getAll() {
         return null;

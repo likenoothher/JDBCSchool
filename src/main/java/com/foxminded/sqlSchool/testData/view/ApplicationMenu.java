@@ -1,12 +1,11 @@
 package com.foxminded.sqlSchool.testData.view;
 
 import com.foxminded.sqlSchool.ConnectionBuilder;
-import com.foxminded.sqlSchool.DAO.*;
-import com.foxminded.sqlSchool.DTO.Course;
-import com.foxminded.sqlSchool.DTO.Group;
+import com.foxminded.sqlSchool.DAO.GenericDao;
+import com.foxminded.sqlSchool.DAO.StudentCoursesDao;
+import com.foxminded.sqlSchool.DAO.StudentDao;
 import com.foxminded.sqlSchool.DTO.Student;
 import com.foxminded.sqlSchool.DTO.StudentCourse;
-import com.foxminded.sqlSchool.queryExecutor.MenyQueryExecutor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -16,14 +15,37 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class ApplicationMenu {
-    private static final MenyQueryExecutor menyQueryExecutor = new MenyQueryExecutor();
+    private static final String GET_AVAILABLE_COURSES_FOR_STUDENT = "select course_id, course_name from courses\n" +
+        "where course_id not in (select course_id from students_courses where student_id = ?)";
+
+    private static final String GET_STUDENT_COURSES = "select student_id, students_courses.course_id, course_name\n" +
+        "from students_courses inner join courses on students_courses.course_id = courses.course_id\n" +
+        "where student_id = ?;";
+
+    private static final String GET_COURSE_PARTICIPANTS = "select courses.course_id, courses.course_name,\n" +
+        "students_courses.student_id, students.first_name, students.last_name\n" +
+        "from students_courses  \n" +
+        "inner join courses on courses.course_id = students_courses.course_id \n" +
+        "inner join students on students.student_id = students_courses.student_id\n" +
+        "where courses.course_name = ?";
+
+    private static final String GET_GROUPS_NAMES_AMOUNT_LESS_OR_EQUAL = "select students.group_id,\n" +
+        "groups.group_name, count (students.group_id) \n" +
+        "from students\n" +
+        "inner join groups on students.group_id = groups.group_id\n" +
+        "group by students.group_id, groups.group_id\n" +
+        "having count (students.group_id) <= ?;";
+
     private static final List<String> appropriateChoices = List.of("a", "b", "c", "d", "e", "f");
 
-    public static void showMenu() {
-        System.out.println("Choose one from suggested options, insert item letter and press Enter:\n" +
+
+    public static void callApplicationMenu() {
+        print("Choose one from suggested options, insert item letter and press Enter:\n" +
             "a. Find all groups with less or equals student count\n" +
             "b. Find all students related to course with given name\n" +
             "c. Add new student\n" +
@@ -34,13 +56,13 @@ public class ApplicationMenu {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
 
             while (true) {
-                String choosedItem = reader.readLine().toLowerCase();
-                if (appropriateChoices.contains(choosedItem)) {
-                    invokeMenuItem(choosedItem);
+                String chooseItem = reader.readLine().toLowerCase();
+                if (appropriateChoices.contains(chooseItem)) {
+                    callMenuItem(chooseItem);
                     break;
                 } else {
-                    System.out.println("Incorrect choice");
-                    showMenu();
+                    print("Incorrect choice");
+                    callApplicationMenu();
                 }
             }
         } catch (IOException e) {
@@ -49,191 +71,190 @@ public class ApplicationMenu {
 
     }
 
-    private static void invokeMenuItem(String choosedItem) {
-        if (choosedItem.equals("a")) {
+    private static void callMenuItem(String chooseItem) {
+        if (chooseItem.equals("a")) {
             findGroupsLessOrEqualAmount();
+            callApplicationMenu();
         }
-        if (choosedItem.equals("b")) {
+        if (chooseItem.equals("b")) {
             findCourseParticipants();
+            callApplicationMenu();
         }
-        if (choosedItem.equals("c")) {
+        if (chooseItem.equals("c")) {
             addNewStudent();
+            callApplicationMenu();
         }
-        if (choosedItem.equals("d")) {
+        if (chooseItem.equals("d")) {
             deleteStudentById();
+            callApplicationMenu();
         }
-        if (choosedItem.equals("e")) {
+        if (chooseItem.equals("e")) {
             addStudentToCourse();
+            callApplicationMenu();
         }
-        if (choosedItem.equals("f")) {
+        if (chooseItem.equals("f")) {
             deleteStudentFromCourse();
+            callApplicationMenu();
         }
     }
 
     private static void findGroupsLessOrEqualAmount() {
-        System.out.println("Enter limit of group entrance: ");
+        print("Enter limit of group participants: ");
+        int participantsLimit = readNumber();
+        List<String> groupNames = new ArrayList<>();
 
-        String sqlQuery = "select students.group_id, groups.group_name, count (students.group_id) \n" +
-            "from students\n" +
-            "inner join groups on students.group_id = groups.group_id\n" +
-            "group by students.group_id, groups.group_id\n" +
-            "having count (students.group_id) <= ?;";
+        try (Connection connection = ConnectionBuilder.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_GROUPS_NAMES_AMOUNT_LESS_OR_EQUAL);) {
+            preparedStatement.setInt(1, participantsLimit);
+            ResultSet resultSet = preparedStatement.executeQuery();
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            GenericDao<Group> groupDao = new GroupDao();
-            List<String> groupNames = new ArrayList<>();
-            int participantsLimit = Integer.parseInt(reader.readLine());
-            System.out.println("Groups with participants amount less or equal than " + participantsLimit + " are:");
-
-            try (Connection connection = ConnectionBuilder.getConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-            ) {
-                preparedStatement.setInt(1, participantsLimit);
-                ResultSet resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()) {
-                    String groupName = (resultSet.getString("GROUP_NAME"));
-                    groupNames.add(groupName);
-                }
-
-                groupNames.forEach(System.out::println);
-
-            } catch (SQLException e) {
-                throw new RuntimeException("Error getting groups ", e.getCause());
+            while (resultSet.next()) {
+                String groupName = (resultSet.getString("GROUP_NAME"));
+                groupNames.add(groupName);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred during searching groups ");
+            print("Groups with participants amount less or equal than " + participantsLimit + " are:");
+            print(groupNames);
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error during getting groups ", e.getCause());
         }
+
     }
 
     private static void findCourseParticipants() {
-        System.out.println("Insert course name:");
-        String sqlQuery = "select courses.course_id, courses.course_name, students_courses.course_id, students_courses.student_id\n" +
-            "from courses  inner join students_courses on courses.course_id = students_courses.course_id\n" +
-            "where courses.course_name = ?;";
+        print("Insert course name:");
+        String courseName = readString();
+        List<String> courseParticipants = new ArrayList<>();
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String courseName = reader.readLine();
-            GenericDao<Student> studentDao = new StudentDao();
-            List<Student> courseParticipants = new ArrayList<>();
-
-
-            try (Connection connection = ConnectionBuilder.getConnection();
-                 PreparedStatement preparedStatement = connection.prepareStatement(sqlQuery);
-            ) {
-                preparedStatement.setString(1, courseName);
-                ResultSet resultSet = preparedStatement.executeQuery();
-                while (resultSet.next()) {
-                    int studentId = (resultSet.getInt("STUDENT_ID"));
-                    courseParticipants.add(studentDao.getById(studentId).get());
-                }
-                System.out.println("Participants of " + courseName + " are:");
-                courseParticipants.forEach(courseParticipant -> {
-                    System.out.println(courseParticipant.getFirstName() + " " + courseParticipant.getLastName());
-                });
-
-            } catch (SQLException e) {
-                throw new RuntimeException("Error getting all students from the database ", e.getCause());
+        try (Connection connection = ConnectionBuilder.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_COURSE_PARTICIPANTS);) {
+            preparedStatement.setString(1, courseName);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                String firstName = resultSet.getString("FIRST_NAME");
+                String lastName = resultSet.getString("LAST_NAME");
+                courseParticipants.add(lastName + " " + firstName);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred during searching course participants ");
+            print("Participants of " + courseName + " are:");
+            print(courseParticipants);
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting all students from the database ", e.getCause());
         }
+
     }
 
     private static void addNewStudent() {
-        System.out.println("Insert student first name:");
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String firstName = reader.readLine();
-            firstName = firstName.substring(0, 1).toUpperCase() + firstName.substring(1).toLowerCase();
-            System.out.println("Insert student last name:");
-            String lastName = reader.readLine();
-            lastName = lastName.substring(0, 1).toUpperCase() + lastName.substring(1).toLowerCase();
-            Student student = new Student(firstName, lastName);
-            new StudentDao().insert(student);
-            ApplicationMenu.showMenu();
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred during establishing student's name ");
-        }
+        print("Insert student first name:");
+        String firstName = readString();
+        firstName = firstName.substring(0, 1).toUpperCase() + firstName.substring(1).toLowerCase();
+        print("Insert student last name:");
+        String lastName = readString();
+        lastName = lastName.substring(0, 1).toUpperCase() + lastName.substring(1).toLowerCase();
+
+        new StudentDao().insert(new Student(firstName, lastName));
+        print("Student was successfully added");
     }
 
     private static void deleteStudentById() {
-        System.out.print("Insert ID of student for deleting: ");
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String studentId = reader.readLine().toLowerCase(); // add checking for string!!!!!!!!!!!!!
-            int studentIdInt = Integer.parseInt(studentId);
-            GenericDao<Student> studentDao = new StudentDao();
-            studentDao.delete(studentDao.getById(studentIdInt).get()); // fix it
-            System.out.println("Student with ID " + studentIdInt + " was successfully deleted\n");
-            ApplicationMenu.showMenu();
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred during establishing student's ID ");
-        }
+        print("Insert ID of student for deleting: ");
+        int studentIdInt = readNumber();
+        GenericDao<Student> studentDao = new StudentDao();
+        studentDao.delete(studentDao.getById(studentIdInt).get()); // fix it
+        print("Student with ID " + studentIdInt + " was successfully deleted");
     }
 
     private static void addStudentToCourse() {
-        System.out.print("Insert ID of student you want to add a course to: ");
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String studentId = reader.readLine(); // add checking for string!!!!!!!!!!!!!
-            int studentIdInt = Integer.parseInt(studentId);
-            GenericDao<Student> studentDao = new StudentDao();
-            GenericDao<Course> courseDao = new CourseDao();
-            StudentCoursesDao studentCoursesDao = new StudentCoursesDao();
+        GenericDao<StudentCourse> studentCoursesDao = new StudentCoursesDao();
+        print("Insert ID of student you want to add a course to: ");
+        int studentId = readNumber();
 
-            Student student = studentDao.getById(studentIdInt).get();
+        Map<Integer, String> availableCoursesToAdd = new HashMap<>();
 
-            List<Integer> studentCoursesIds = studentCoursesDao.getStudentsCoursesIds(studentIdInt);
-
-            System.out.print("Insert ID of course you want to add for a student with ID " + studentId + ": ");
-            while (true) {
-
-                String courseId = reader.readLine(); // add checking for string!!!!!!!!!!!!!
-                int courseIdInt = Integer.parseInt(courseId);
-                if (studentCoursesIds.contains(courseIdInt)) {
-                    System.out.println("Student already has this course. Pick another one:");
-                } else {
-                    studentCoursesDao.insert(new StudentCourse(studentIdInt, courseIdInt));
-                    break;
-                }
+        try (Connection connection = ConnectionBuilder.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_AVAILABLE_COURSES_FOR_STUDENT);) {
+            preparedStatement.setInt(1, studentId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                int courseId = resultSet.getInt("COURSE_ID");
+                String courseName = resultSet.getString("COURSE_NAME");
+                availableCoursesToAdd.put(courseId, courseName);
             }
-
-
-            System.out.println("Course was successfully addded\n");
-            ApplicationMenu.showMenu();
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred during add course to student");
+            print("Insert course id to add:");
+            print(availableCoursesToAdd);
+            int chooseId = readNumber();
+            studentCoursesDao.insert(new StudentCourse(studentId, chooseId));
+            print("Student was successfully added to course");
+        } catch (SQLException e) {
+           throw  new RuntimeException("Something went wrong during adding additional course to student");
         }
     }
 
+
     private static void deleteStudentFromCourse() {
-        System.out.print("Insert ID of student for deleting one of his/her courses: ");
+        print("Insert ID of student for deleting one of his/her courses: ");
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            String studentId = reader.readLine(); // add checking for string!!!!!!!!!!!!!
-            int studentIdInt = Integer.parseInt(studentId);
-            StudentCoursesDao studentCoursesDao = new StudentCoursesDao();
-            List<Integer> studentCoursesIds = studentCoursesDao.getStudentsCoursesIds(studentIdInt);
+        int studentId = readNumber();
 
-            GenericDao<Course> courseDao = new CourseDao();
+        Map<Integer, String> studentCourses = new HashMap<>();
 
-            List<Course> studentCourses = new ArrayList<>();
-
-            System.out.println("What course do you want to delete? Insert number of string");
-
-            for (Integer courseId : studentCoursesIds) {
-                Course course = courseDao.getById(courseId).get();
-                System.out.println(course.getName());
-                studentCourses.add(course);
+        try (Connection connection = ConnectionBuilder.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(GET_STUDENT_COURSES)) {
+            preparedStatement.setInt(1, studentId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()) {
+                int courseId = resultSet.getInt("COURSE_ID");
+                String courseName = (resultSet.getString("COURSE_NAME"));
+                studentCourses.put(courseId, courseName);
             }
-            int courseItemToDelete = Integer.parseInt(reader.readLine());
-            studentCoursesDao.delete(new StudentCourse(studentIdInt, studentCourses.get(courseItemToDelete - 1).getId()));
+            print("What course do you want to delete? Insert course id:");
+            print(studentCourses);
+            int courseIdForDelete = readNumber();
 
-            System.out.println("Course with ID " + courseItemToDelete + " was successfully deleted from student" +
-                " with ID " + studentId + "\n");
-            ApplicationMenu.showMenu();
-
-            System.out.println("Student with ID " + studentIdInt + " was successfully deleted\n");
-            ApplicationMenu.showMenu();
-        } catch (IOException e) {
-            throw new RuntimeException("Error occurred during establishing student's ID ");
+            new StudentCoursesDao().delete(new StudentCourse(studentId, courseIdForDelete));
+            print("Course was successfully deleted");
+        } catch (SQLException e) {
+            throw new RuntimeException("Error getting groups ", e.getCause());
         }
+
+
+    }
+
+    private static String readString() {  // add closing!!!!!!!!!!!!!!
+        String line = new String();
+        while (line.isEmpty()) {
+            try {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+                line = reader.readLine();
+            } catch (IOException e) {
+                System.out.println("Some problems occurred during reading input");
+            }
+
+        }
+        return line;
+    }
+
+    private static int readNumber() {
+        int number = -1;
+        while (number == -1) {
+            try {
+                number = Integer.parseInt(readString());
+            } catch (NumberFormatException e) {
+                System.out.println("Some problems occurred during parsing input. Try again");
+            }
+        }
+        return number;
+    }
+
+    private static void print(Map<Integer, String> mapToPrint) {
+        mapToPrint.forEach((key, value) -> System.out.println(key + "." + value));
+    }
+
+    private static void print(List<String> listToPrint){
+        listToPrint.forEach(System.out::println);
+    }
+
+    private static void print(String stringToPrint){
+        System.out.println(stringToPrint);
     }
 }
