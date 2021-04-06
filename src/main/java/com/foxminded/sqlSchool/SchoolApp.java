@@ -1,20 +1,15 @@
 package com.foxminded.sqlSchool;
 
-import com.foxminded.sqlSchool.DAO.GroupDao;
-import com.foxminded.sqlSchool.DAO.StudentDao;
-import com.foxminded.sqlSchool.DTO.Group;
-import com.foxminded.sqlSchool.DTO.Student;
 import com.foxminded.sqlSchool.scriptExecutor.SqlScriptExecutor;
 import com.foxminded.sqlSchool.testData.TestDataGenerator;
 import com.foxminded.sqlSchool.testData.TestDataLoader;
+import com.foxminded.sqlSchool.testData.view.ApplicationMenu;
 
-import java.io.IOException;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public class SchoolApp {
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) {
 
         Connection connection = ConnectionBuilder.getConnection();
         SqlScriptExecutor scriptExecutor = new SqlScriptExecutor(connection);
@@ -31,7 +26,7 @@ public class SchoolApp {
         TestDataGenerator testDataGenerator = TestDataGenerator.getInstance();
         TestDataLoader testDataLoader = new TestDataLoader(testDataGenerator);
         testDataLoader.loadTestData();
-
+        ApplicationMenu.showMenu();
 
 
     }

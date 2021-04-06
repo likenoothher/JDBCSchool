@@ -33,7 +33,7 @@ public class TestDataLoader {
     }
 
     private void loadStudents() {
-        AtomicInteger distributedStudentsAmount = new AtomicInteger(200);
+        AtomicInteger distributedStudentsAmount = new AtomicInteger(20);
 
         Map<Group, Integer> groupSizes = calculateGroupSizes();
 
@@ -44,8 +44,8 @@ public class TestDataLoader {
 
     private void insertStudentWithGroups(Map.Entry<Group, Integer> groupStudentsAmount, AtomicInteger distributedStudentsAmount) {
         GenericDao<Student> studentDao = new StudentDao();
-        int minGroupSize = 10;
-        int maxGroupSize = 30;
+        int minGroupSize = 1;
+        int maxGroupSize = 3;
         {
             if (groupStudentsAmount.getValue() >= minGroupSize && groupStudentsAmount.getValue() <= maxGroupSize) {
                 distributedStudentsAmount.addAndGet(-groupStudentsAmount.getValue());
@@ -69,9 +69,9 @@ public class TestDataLoader {
         GenericDao<Group> groupDao = new GroupDao();
         List<Group> groupList = groupDao.getAll();
 
-        int minGroupSize = 10;
-        int maxGroupSize = 30;
-        int distributedStudentsAmount = 200;
+        int minGroupSize = 1;
+        int maxGroupSize = 3;
+        int distributedStudentsAmount = 20;
 
         for (Group group : groupList) {
             int currentGroupSize = ThreadLocalRandom.current().nextInt(minGroupSize, maxGroupSize + 1);
@@ -108,14 +108,14 @@ public class TestDataLoader {
         List<Student> students = studentDao.getAll();
         List<Course> courses = courseDao.getAll();
 
-        for (Student student:students) {
+        for (Student student : students) {
             int coursesAmount = ThreadLocalRandom.current().nextInt(minCourseAmount, maxCourseAmount + 1);
             List<Course> pickedCourses = getRandomCourses(coursesAmount, courses);
-                for (Course course: pickedCourses) {
-                    StudentCourse studentCourse = new StudentCourse(student.getId(),
-                        course.getId());
-                    studentCourseDao.insert(studentCourse);
-                }
+            for (Course course : pickedCourses) {
+                StudentCourse studentCourse = new StudentCourse(student.getId(),
+                    course.getId());
+                studentCourseDao.insert(studentCourse);
+            }
         }
 
     }

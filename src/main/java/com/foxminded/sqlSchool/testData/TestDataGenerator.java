@@ -5,10 +5,10 @@ import org.apache.commons.lang3.RandomStringUtils;
 public class TestDataGenerator {
     private static TestDataGenerator testDataGenerator;
 
-    private TestDataGenerator(){
+    private TestDataGenerator() {
     }
 
-    public static TestDataGenerator getInstance(){
+    public static TestDataGenerator getInstance() {
         if (testDataGenerator == null) {
             testDataGenerator = new TestDataGenerator();
         }

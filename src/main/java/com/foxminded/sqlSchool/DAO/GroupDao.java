@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class GroupDao implements GenericDao<Group>{
-    private static final String INSERT_GROUP = "INSERT INTO groups" + " (GROUP_NAME) VALUES (?);";
+public class GroupDao implements GenericDao<Group> {
+    private static final String INSERT_GROUP = "INSERT INTO groups (GROUP_NAME) VALUES (?);";
     private static final String FIND_ALL_GROUPS = "SELECT * FROM groups";
 
     @Override
