@@ -20,27 +20,27 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 public class DAOTest {
 
     @Parameterized.Parameters
-    public static Collection<Object> data(){
+    public static Collection<Object> data() {
 
         return Arrays.asList(new Object[][]{
-            {new Course(1,"testCourse", "testCourseDescription"),
-               new CourseDao()},
-            {new Group(1,"testGroup"), new GroupDao()},
-            {new Student("firstName", "lastName",1), new StudentDao()},
+            {new Course(1, "testCourse", "testCourseDescription"),
+                new CourseDao()},
+            {new Group(1, "testGroup"), new GroupDao()},
+            {new Student("firstName", "lastName", 1), new StudentDao()},
         });
     }
 
-    public static Collection<Object> dataForGetAllMethod(){
+    public static Collection<Object> dataForGetAllMethod() {
 
         return Arrays.asList(new Object[][]{
-            {Arrays.asList(new Course(1,"testCourse1", "testCourseDescription1"),
-                new Course(2,"testCourse2", "testCourseDescription2")),
+            {Arrays.asList(new Course(1, "testCourse1", "testCourseDescription1"),
+                new Course(2, "testCourse2", "testCourseDescription2")),
                 new CourseDao()},
 
-            {Arrays.asList(new Group(1,"testGroup1"),new Group(2,"testGroup2")), new GroupDao()},
+            {Arrays.asList(new Group(1, "testGroup1"), new Group(2, "testGroup2")), new GroupDao()},
 
-            {Arrays.asList(new Student("firstName1", "lastName1",1),
-                new Student("firstName1", "lastName1",2)), new StudentDao()},
+            {Arrays.asList(new Student("firstName1", "lastName1", 1),
+                new Student("firstName1", "lastName1", 2)), new StudentDao()},
 
         });
     }
@@ -48,7 +48,7 @@ public class DAOTest {
     private SqlScriptExecutor scriptExecutor;
 
     @BeforeEach
-    public void loadData(){
+    public void loadData() {
         scriptExecutor = new SqlScriptExecutor(ConnectionBuilder.getConnection());
         scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
 
@@ -56,19 +56,19 @@ public class DAOTest {
 
     @ParameterizedTest
     @MethodSource("dataForGetAllMethod")
-    public void testGetAllExceptStudentsCoursesDao(List input, GenericDao DAO){
+    public void testGetAllExceptStudentsCoursesDao(List input, GenericDao DAO) {
 
-        input.forEach(DTObject ->DAO.insert(DTObject));
+        input.forEach(DTObject -> DAO.insert(DTObject));
 
         assertEquals(input, DAO.getAll());
     }
 
     @ParameterizedTest
     @MethodSource("data")
-    public void testInsertAndGetByIdExceptStudentsCoursesDao(GenericDTO input, GenericDao DAO){
+    public void testInsertAndGetByIdExceptStudentsCoursesDao(GenericDTO input, GenericDao DAO) {
         GenericDao genericDao = DAO;
         genericDao.insert(input);
-        assertEquals(input, genericDao.getById(new IdKey(1,1)).get());
+        assertEquals(input, genericDao.getById(new IdKey(1, 1)).get());
     }
 
     @ParameterizedTest
@@ -87,23 +87,23 @@ public class DAOTest {
         GenericDao<Group> groupDao = new GroupDao();
         GenericDao<Student> studentDao = new StudentDao();
 
-        courseDao.insert(new Course(1,"testCourse1", "testCourseDescription1"));
+        courseDao.insert(new Course(1, "testCourse1", "testCourseDescription1"));
         groupDao.insert(new Group("testGroup1"));
         studentDao.insert(new Student("firstName1", "lastName1"));
 
-        courseDao.insert(new Course(2,"testCourse2", "testCourseDescription2"));
+        courseDao.insert(new Course(2, "testCourse2", "testCourseDescription2"));
         groupDao.insert(new Group("testGroup2"));
         studentDao.insert(new Student("firstName2", "lastName2"));
 
-        StudentCourse studentCourse1 = new StudentCourse(1,1);
-        StudentCourse studentCourse2 = new StudentCourse(2,2);
+        StudentCourse studentCourse1 = new StudentCourse(1, 1);
+        StudentCourse studentCourse2 = new StudentCourse(2, 2);
 
         studentCourseDao.insert(studentCourse1);
         studentCourseDao.insert(studentCourse2);
 
         List<StudentCourse> expected = new ArrayList<>();
-        expected.add(new StudentCourse(1,1));
-        expected.add(new StudentCourse(2,2));
+        expected.add(new StudentCourse(1, 1));
+        expected.add(new StudentCourse(2, 2));
 
         assertEquals(expected, studentCourseDao.getAll());
 
@@ -117,13 +117,13 @@ public class DAOTest {
         GenericDao<Group> groupDao = new GroupDao();
         GenericDao<Student> studentDao = new StudentDao();
 
-        courseDao.insert(new Course(1,"testCourse", "testCourseDescription"));
+        courseDao.insert(new Course(1, "testCourse", "testCourseDescription"));
         groupDao.insert(new Group("testGroup"));
         studentDao.insert(new Student("firstName1", "lastName1"));
-        StudentCourse studentCourse = new StudentCourse(1,1);
+        StudentCourse studentCourse = new StudentCourse(1, 1);
         studentCourseDao.insert(studentCourse);
 
-        assertEquals(studentCourse, studentCourseDao.getById(new IdKey(1,1)).get());
+        assertEquals(studentCourse, studentCourseDao.getById(new IdKey(1, 1)).get());
 
     }
 
@@ -134,18 +134,16 @@ public class DAOTest {
         GenericDao<Group> groupDao = new GroupDao();
         GenericDao<Student> studentDao = new StudentDao();
 
-        courseDao.insert(new Course(1,"testCourse", "testCourseDescription"));
+        courseDao.insert(new Course(1, "testCourse", "testCourseDescription"));
         groupDao.insert(new Group("testGroup"));
         studentDao.insert(new Student("firstName1", "lastName1"));
-        StudentCourse studentCourse = new StudentCourse(1,1);
+        StudentCourse studentCourse = new StudentCourse(1, 1);
         studentCourseDao.insert(studentCourse);
         studentCourseDao.delete(studentCourse);
 
-        assertThrows(RuntimeException.class, () -> studentCourseDao.getById(new IdKey(1,1)).get());
+        assertThrows(RuntimeException.class, () -> studentCourseDao.getById(new IdKey(1, 1)).get());
 
     }
-
-
 
 
 }

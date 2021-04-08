@@ -2,7 +2,6 @@ package com.foxminded.sqlSchool.data;
 
 import com.foxminded.sqlSchool.connection.ConnectionBuilder;
 import com.foxminded.sqlSchool.scriptExecutor.SqlScriptExecutor;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -14,15 +13,15 @@ import java.sql.SQLException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-
 public class DataLoaderTest {
 
     private DataLoader dataLoader;
     private SqlScriptExecutor scriptExecutor;
 
     @BeforeEach
-    public void loadData(){
+    public void loadData() {
         scriptExecutor = new SqlScriptExecutor(ConnectionBuilder.getConnection());
+
         scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
         dataLoader = new DataLoader(DataGenerator.getInstance());
         dataLoader.loadTestData();
@@ -42,7 +41,7 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertEquals(20, amountOfStudents);
+        assertEquals(200, amountOfStudents);
     }
 
     @Test
@@ -62,7 +61,7 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertTrue(minCoursesAmount >= minCoursesAmountInTable );
+        assertTrue(minCoursesAmount >= minCoursesAmountInTable);
     }
 
     @Test
@@ -82,12 +81,12 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertTrue(maxCoursesAmount <= maxCoursesAmountInTable );
+        assertTrue(maxCoursesAmount <= maxCoursesAmountInTable);
     }
 
     @Test
     public void whenDataLoaded_thenEveryGroupHasMin10Students() {
-        int minStudentsAmount = 1;
+        int minStudentsAllowed = 10;
         int minStudentsAmountInGroup = 0;
         String countStudentQuery = "select group_id, count(student_id)\n" +
             "from students\n" +
@@ -102,12 +101,13 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertTrue(minStudentsAmount >= minStudentsAmountInGroup );
+
+        assertTrue(minStudentsAllowed <= minStudentsAmountInGroup);
     }
 
     @Test
     public void whenDataLoaded_thenEveryGroupHasMax30Students() {
-        int maxStudentsAmount = 3;
+        int maxStudentsAllowed = 30;
         int maxStudentsAmountInGroup = 0;
         String countStudentQuery = "select group_id, count(student_id)\n" +
             "from students\n" +
@@ -122,7 +122,7 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertTrue(maxStudentsAmount <= maxStudentsAmountInGroup );
+        assertTrue(maxStudentsAmountInGroup >= maxStudentsAllowed);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertEquals(requiredGroupAmount,groupAmountInDb );
+        assertEquals(requiredGroupAmount, groupAmountInDb);
     }
 
     @Test
@@ -156,7 +156,7 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertEquals(requiredCourseAmount,courseAmountInDb );
+        assertEquals(requiredCourseAmount, courseAmountInDb);
     }
 
 }

@@ -22,6 +22,7 @@ public class SqlScriptExecutor {
             throw new RuntimeException("File doesn't exist");
         }
         try {
+            scriptRunner.setLogWriter(null);
             scriptRunner.runScript(sqlScriptReader);
         } catch (SQLException | IOException throwables) {
             throwables.printStackTrace();
