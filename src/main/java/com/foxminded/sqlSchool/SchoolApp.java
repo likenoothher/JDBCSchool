@@ -1,9 +1,10 @@
 package com.foxminded.sqlSchool;
 
+import com.foxminded.sqlSchool.connection.ConnectionBuilder;
+import com.foxminded.sqlSchool.data.DataGenerator;
+import com.foxminded.sqlSchool.data.DataLoader;
+import com.foxminded.sqlSchool.menu.ApplicationMenu;
 import com.foxminded.sqlSchool.scriptExecutor.SqlScriptExecutor;
-import com.foxminded.sqlSchool.testData.TestDataGenerator;
-import com.foxminded.sqlSchool.testData.TestDataLoader;
-import com.foxminded.sqlSchool.testData.view.ApplicationMenu;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -11,23 +12,18 @@ import java.sql.SQLException;
 public class SchoolApp {
     public static void main(String[] args) {
 
-        Connection connection = ConnectionBuilder.getConnection();
-        SqlScriptExecutor scriptExecutor = new SqlScriptExecutor(connection);
-        scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
-
-        try {
-            if (connection != null) {
-                connection.close();
-            }
+        try (Connection connection = ConnectionBuilder.getConnection()) {
+            SqlScriptExecutor scriptExecutor = new SqlScriptExecutor(connection);
+            scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
 
-        TestDataGenerator testDataGenerator = TestDataGenerator.getInstance();
-        TestDataLoader testDataLoader = new TestDataLoader(testDataGenerator);
-        testDataLoader.loadTestData();
-        ApplicationMenu.callApplicationMenu();
-
+        DataGenerator dataGenerator = DataGenerator.getInstance();
+        DataLoader dataLoader = new DataLoader(dataGenerator);
+        dataLoader.loadTestData();
+        ApplicationMenu applicationMenu = new ApplicationMenu();
+        applicationMenu.callApplicationMenu();
 
     }
 

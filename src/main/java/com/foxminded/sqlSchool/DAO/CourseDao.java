@@ -1,7 +1,7 @@
 package com.foxminded.sqlSchool.DAO;
 
-import com.foxminded.sqlSchool.ConnectionBuilder;
 import com.foxminded.sqlSchool.DTO.Course;
+import com.foxminded.sqlSchool.connection.ConnectionBuilder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -16,14 +16,15 @@ public class CourseDao implements GenericDao<Course> {
     private static final String INSERT_COURSE = "INSERT INTO courses" + " (COURSE_NAME, COURSE_DESCRIPTION) VALUES" +
         " (?, ?);";
     private static final String FIND_ALL_COURSES = "SELECT * FROM courses";
+    private static final String DELETE_COURSE_BY_ID = "DELETE FROM courses WHERE COURSE_ID = ?";
 
     @Override
-    public Optional<Course> getById(int id) {
+    public Optional<Course> getById(IdKey id) {
         Course course;
         try (Connection connection = ConnectionBuilder.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_COURSE_BY_ID)) {
             course = new Course();
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, id.getFirstId());
 
             ResultSet resultSet = preparedStatement.executeQuery();
             resultSet.next();
@@ -34,11 +35,10 @@ public class CourseDao implements GenericDao<Course> {
 
             resultSet.close();
         } catch (SQLException e) {
-            throw new RuntimeException("Error getting course from the database ", e);
+            throw new RuntimeException("Error getting course from the database " + e.getLocalizedMessage());
         }
-        Optional<Course> courseOptional = Optional.of(course);
 
-        return courseOptional;
+        return Optional.of(course);
 
     }
 
@@ -58,7 +58,7 @@ public class CourseDao implements GenericDao<Course> {
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error getting all groups from the database ", e);
+            throw new RuntimeException("Error getting all groups from the database " + e.getLocalizedMessage());
         }
 
         return courses;
@@ -67,22 +67,24 @@ public class CourseDao implements GenericDao<Course> {
     @Override
     public void insert(Course course) {
         try (Connection connection = ConnectionBuilder.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_COURSE);) {
+             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_COURSE)) {
             preparedStatement.setString(1, course.getName());
             preparedStatement.setString(2, course.getCourseDescription());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error inserting course to the database ", e);
+            throw new RuntimeException("Error inserting course to the database " + e.getLocalizedMessage());
         }
     }
 
     @Override
     public void delete(Course course) {
-
+        try (Connection connection = ConnectionBuilder.getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(DELETE_COURSE_BY_ID)) {
+            preparedStatement.setInt(1, course.getId());
+            preparedStatement.executeUpdate();
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting course from the database " + e.getLocalizedMessage());
+        }
     }
 
-    @Override
-    public void update(Course course) {
-
-    }
 }

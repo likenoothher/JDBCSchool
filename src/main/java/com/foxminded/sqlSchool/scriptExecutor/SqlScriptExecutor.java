@@ -6,8 +6,6 @@ import java.io.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-// fix exceptions!!!!!!!!!
-
 public class SqlScriptExecutor {
     private final Connection connection;
 
@@ -17,7 +15,7 @@ public class SqlScriptExecutor {
 
     public void executeSQLScript(String scriptFilePath) {
         ScriptRunner scriptRunner = new ScriptRunner(connection, false, true);
-        Reader sqlScriptReader = null;
+        Reader sqlScriptReader;
         try {
             sqlScriptReader = new BufferedReader(new FileReader(scriptFilePath));
         } catch (FileNotFoundException e) {
@@ -25,10 +23,8 @@ public class SqlScriptExecutor {
         }
         try {
             scriptRunner.runScript(sqlScriptReader);
-        } catch (SQLException throwables) {
+        } catch (SQLException | IOException throwables) {
             throwables.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
         try {

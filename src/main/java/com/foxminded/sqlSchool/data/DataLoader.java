@@ -1,4 +1,4 @@
-package com.foxminded.sqlSchool.testData;
+package com.foxminded.sqlSchool.data;
 
 import com.foxminded.sqlSchool.DAO.*;
 import com.foxminded.sqlSchool.DTO.Course;
@@ -10,11 +10,11 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TestDataLoader {
-    private final TestDataGenerator testDataGenerator;
+public class DataLoader {
+    private final DataGenerator dataGenerator;
 
-    public TestDataLoader(TestDataGenerator testDataGenerator) {
-        this.testDataGenerator = testDataGenerator;
+    public DataLoader(DataGenerator dataGenerator) {
+        this.dataGenerator = dataGenerator;
     }
 
     public void loadTestData() {
@@ -26,32 +26,32 @@ public class TestDataLoader {
 
     private void loadGroups() {
         GenericDao<Group> groupDao = new GroupDao();
-        String[] groupNames = testDataGenerator.getGroupNames();
+        String[] groupNames = dataGenerator.getGroupNames();
         for (int i = 0; i < groupNames.length; i++) {
             groupDao.insert(new Group(groupNames[i]));
         }
     }
 
     private void loadStudents() {
-        AtomicInteger distributedStudentsAmount = new AtomicInteger(20);
+        AtomicInteger distributedStudentsAmount = new AtomicInteger(200);
 
         Map<Group, Integer> groupSizes = calculateGroupSizes();
 
-        groupSizes.entrySet().forEach(groupStudentsAmount -> insertStudentWithGroups(groupStudentsAmount, distributedStudentsAmount));
+        groupSizes.entrySet().forEach(groupStudentsAmount -> insertStudentToGroups(groupStudentsAmount, distributedStudentsAmount));
 
         insertStudentWithoutGroup(distributedStudentsAmount);
     }
 
-    private void insertStudentWithGroups(Map.Entry<Group, Integer> groupStudentsAmount, AtomicInteger distributedStudentsAmount) {
+    private void insertStudentToGroups(Map.Entry<Group, Integer> groupStudentsAmount, AtomicInteger distributedStudentsAmount) {
         GenericDao<Student> studentDao = new StudentDao();
-        int minGroupSize = 1;
-        int maxGroupSize = 3;
+        int minGroupSize = 10;
+        int maxGroupSize = 30;
         {
             if (groupStudentsAmount.getValue() >= minGroupSize && groupStudentsAmount.getValue() <= maxGroupSize) {
                 distributedStudentsAmount.addAndGet(-groupStudentsAmount.getValue());
                 for (int i = 0; i < groupStudentsAmount.getValue(); i++) {
                     studentDao.insert(new Student(groupStudentsAmount.getKey().getId(),
-                        testDataGenerator.getRandomFirstName(), testDataGenerator.getRandomLastName()));
+                        dataGenerator.getRandomFirstName(), dataGenerator.getRandomLastName()));
                 }
             }
         }
@@ -60,7 +60,7 @@ public class TestDataLoader {
     private void insertStudentWithoutGroup(AtomicInteger distributedStudentsAmount) {
         GenericDao<Student> studentDao = new StudentDao();
         for (int i = distributedStudentsAmount.get(); i > 0; i--) {
-            studentDao.insert(new Student(testDataGenerator.getRandomFirstName(), testDataGenerator.getRandomLastName()));
+            studentDao.insert(new Student(dataGenerator.getRandomFirstName(), dataGenerator.getRandomLastName()));
         }
     }
 
@@ -69,9 +69,9 @@ public class TestDataLoader {
         GenericDao<Group> groupDao = new GroupDao();
         List<Group> groupList = groupDao.getAll();
 
-        int minGroupSize = 1;
-        int maxGroupSize = 3;
-        int distributedStudentsAmount = 20;
+        int minGroupSize = 10;
+        int maxGroupSize = 30;
+        int distributedStudentsAmount = 200;
 
         for (Group group : groupList) {
             int currentGroupSize = ThreadLocalRandom.current().nextInt(minGroupSize, maxGroupSize + 1);
@@ -91,7 +91,7 @@ public class TestDataLoader {
 
     private void loadCourses() {
         GenericDao<Course> groupDao = new CourseDao();
-        String[] courses = testDataGenerator.getCourses();
+        String[] courses = dataGenerator.getCourses();
         for (int i = 0; i < courses.length; i++) {
             groupDao.insert(new Course(courses[i], courses[i] + " description"));
         }

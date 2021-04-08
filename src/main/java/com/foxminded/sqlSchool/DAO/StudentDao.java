@@ -1,7 +1,7 @@
 package com.foxminded.sqlSchool.DAO;
 
-import com.foxminded.sqlSchool.ConnectionBuilder;
 import com.foxminded.sqlSchool.DTO.Student;
+import com.foxminded.sqlSchool.connection.ConnectionBuilder;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -17,12 +17,12 @@ public class StudentDao implements GenericDao<Student> {
 
 
     @Override
-    public Optional<Student> getById(int id) {
+    public Optional<Student> getById(IdKey id) {
         Student student;
         try (Connection connection = ConnectionBuilder.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(FIND_STUDENT_BY_ID)) {
             student = new Student();
-            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(1, id.getFirstId());
 
             ResultSet resultSet = preparedStatement.executeQuery();
             resultSet.next();
@@ -34,11 +34,10 @@ public class StudentDao implements GenericDao<Student> {
 
             resultSet.close();
         } catch (SQLException e) {
-            throw new RuntimeException("Error getting student from the database ", e);
+            throw new RuntimeException("Error getting student from the database " + e.getLocalizedMessage());
         }
-        Optional<Student> studentOptional = Optional.of(student);
 
-        return studentOptional;
+        return Optional.of(student);
     }
 
     @Override
@@ -56,19 +55,17 @@ public class StudentDao implements GenericDao<Student> {
                 student.setLastName(resultSet.getString("LAST_NAME"));
                 students.add(student);
             }
-
         } catch (SQLException e) {
-            throw new RuntimeException("Error getting all students from the database ", e.getCause());
+            throw new RuntimeException("Error getting all students from the database " + e.getLocalizedMessage());
         }
 
         return students;
-
     }
 
     @Override
     public void insert(Student student) {
         try (Connection connection = ConnectionBuilder.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_STUDENT);) {
+             PreparedStatement preparedStatement = connection.prepareStatement(INSERT_STUDENT)) {
             if (student.getGroupId() != 0) {
                 preparedStatement.setInt(1, student.getGroupId());
             } else {
@@ -78,7 +75,7 @@ public class StudentDao implements GenericDao<Student> {
             preparedStatement.setString(3, student.getLastName());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error inserting student to the database ", e);
+            throw new RuntimeException("Error inserting student to the database " + e.getLocalizedMessage());
         }
 
     }
@@ -86,17 +83,11 @@ public class StudentDao implements GenericDao<Student> {
     @Override
     public void delete(Student student) {
         try (Connection connection = ConnectionBuilder.getConnection();
-             PreparedStatement preparedStatement = connection.prepareStatement(DELETE_STUDENT_BY_ID);) {
+             PreparedStatement preparedStatement = connection.prepareStatement(DELETE_STUDENT_BY_ID)) {
             preparedStatement.setInt(1, student.getId());
             preparedStatement.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Error deleting student from the database ", e);
+            throw new RuntimeException("Error deleting student from the database " + e.getLocalizedMessage());
         }
-
-    }
-
-    @Override
-    public void update(Student student) {
-
     }
 }

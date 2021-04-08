@@ -1,6 +1,8 @@
 package com.foxminded.sqlSchool.DTO;
 
-public class Course {
+import java.util.Objects;
+
+public class Course implements GenericDTO {
     private int id;
     private String name;
     private String courseDescription;
@@ -42,4 +44,20 @@ public class Course {
     public void setCourseDescription(String courseDescription) {
         this.courseDescription = courseDescription;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Course course = (Course) o;
+        return id == course.id &&
+            Objects.equals(name, course.name) &&
+            Objects.equals(courseDescription, course.courseDescription);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, courseDescription);
+    }
+
 }

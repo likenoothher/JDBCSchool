@@ -1,18 +1,18 @@
-package com.foxminded.sqlSchool.testData;
+package com.foxminded.sqlSchool.data;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
-public class TestDataGenerator {
-    private static TestDataGenerator testDataGenerator;
+public class DataGenerator {
+    private static DataGenerator dataGenerator;
 
-    private TestDataGenerator() {
+    private DataGenerator() {
     }
 
-    public static TestDataGenerator getInstance() {
-        if (testDataGenerator == null) {
-            testDataGenerator = new TestDataGenerator();
+    public static DataGenerator getInstance() {
+        if (dataGenerator == null) {
+            dataGenerator = new DataGenerator();
         }
-        return testDataGenerator;
+        return dataGenerator;
     }
 
     private final String[] firstNames = new String[]{
@@ -52,7 +52,8 @@ public class TestDataGenerator {
     private String[] fillRandomGroupNames() {
         String[] groupsName = new String[10];
         for (int i = 0; i < groupsName.length; i++) {
-            groupsName[i] = RandomStringUtils.randomAlphabetic(2).toUpperCase() + "-" + RandomStringUtils.randomNumeric(2);
+            groupsName[i] = RandomStringUtils.randomAlphabetic(2).toUpperCase() + "-"
+                + RandomStringUtils.randomNumeric(2);
         }
         return groupsName;
     }
