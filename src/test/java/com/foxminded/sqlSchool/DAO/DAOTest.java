@@ -27,7 +27,6 @@ public class DAOTest {
                new CourseDao()},
             {new Group(1,"testGroup"), new GroupDao()},
             {new Student("firstName", "lastName",1), new StudentDao()},
-//            {new StudentCourse(1, 1), new StudentCoursesDao()}
         });
     }
 
@@ -43,7 +42,6 @@ public class DAOTest {
             {Arrays.asList(new Student("firstName1", "lastName1",1),
                 new Student("firstName1", "lastName1",2)), new StudentDao()},
 
-//            {Arrays.asList(new StudentCourse(1, 1), new StudentCourse(2, 2)), new StudentCoursesDao()}
         });
     }
 
