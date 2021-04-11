@@ -2,7 +2,7 @@ package com.foxminded.sqlschool.dto;
 
 import java.util.Objects;
 
-public class Student {
+public class Student implements GenericDto {
     private int id;
     private int groupId;
     private String firstName;

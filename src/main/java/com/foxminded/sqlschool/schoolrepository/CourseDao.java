@@ -35,6 +35,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
 
     @Override
     public Optional<Course> getById(Integer id) throws DaoException {
+        logger.trace("Searching for course with id=" + id);
         try (
             Connection connection = ConnectionBuilder.getConnection();
             PreparedStatement statement = connection.prepareStatement(FIND_COURSE_BY_ID)
@@ -47,6 +48,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
                     int courseId = resultSet.getInt("COURSE_ID");
                     String name = resultSet.getString("COURSE_NAME");
                     String description = resultSet.getString("COURSE_DESCRIPTION");
+                    logger.trace("Create course to return");
                     return Optional.of(new Course(courseId, name, description));
                 }
             }
@@ -55,24 +57,24 @@ public class CourseDao implements GenericDao<Course, Integer> {
             logger.warn("Can't get course with id=" + id + " from the database", e);
             throw new DaoException("Error getting course from the database ", e);
         }
-
+        logger.trace("Course with id=" + id + " wasn't found. Returning Optional.empty()");
         return Optional.empty();
     }
 
     @Override
     public List<Course> getAll() throws DaoException {
+        logger.trace("Searching for all courses");
         List<Course> courses = new ArrayList<>();
         try (
             Connection connection = ConnectionBuilder.getConnection();
             PreparedStatement statement = connection.prepareStatement(FIND_ALL_COURSES);
             ResultSet resultSet = statement.executeQuery()
         ) {
-
+            logger.trace("Adding all courses to list");
             while (resultSet.next()) {
                 int courseId = resultSet.getInt("COURSE_ID");
                 String name = resultSet.getString("COURSE_NAME");
                 String description = resultSet.getString("COURSE_DESCRIPTION");
-
                 courses.add(new Course(courseId, name, description));
             }
 
@@ -80,12 +82,13 @@ public class CourseDao implements GenericDao<Course, Integer> {
             logger.warn("Can't get all courses from database", e);
             throw new DaoException("Error getting all courses from the database ", e);
         }
-
+        logger.trace("Returning all found courses");
         return courses;
     }
 
     @Override
     public void insert(Course course) throws DaoException {
+        logger.trace("Inserting course " + course.getName());
         try (
             Connection connection = ConnectionBuilder.getConnection();
             PreparedStatement statement = connection.prepareStatement(INSERT_COURSE)
@@ -94,6 +97,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
             statement.setString(1, course.getName());
             statement.setString(2, course.getCourseDescription());
             statement.executeUpdate();
+            logger.trace("Course " + course.getName() + " was successfully added");
         } catch (SQLException e) {
             logger.warn("Can't insert course " + course.getName() + " to database", e);
             throw new DaoException("Error inserting course to the database ", e);
@@ -102,6 +106,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
 
     @Override
     public void delete(Integer id) throws DaoException {
+        logger.trace("Deleting course with id=" + id);
         try (
             Connection connection = ConnectionBuilder.getConnection();
             PreparedStatement statement = connection.prepareStatement(DELETE_COURSE_BY_ID)
@@ -109,13 +114,15 @@ public class CourseDao implements GenericDao<Course, Integer> {
 
             statement.setInt(1, id);
             statement.executeUpdate();
+            logger.trace("Course with id=" + id + " was successfully deleted");
         } catch (SQLException e) {
             logger.warn("Can't delete course with id=" + id + " from the database", e);
             throw new DaoException("Error deleting course from the database ", e);
         }
     }
 
-    public boolean exist(String courseName) {
+    public boolean existByName(String courseName) {
+        logger.trace("Searching a course with a name " + courseName);
         try (
             Connection connection = ConnectionBuilder.getConnection();
             PreparedStatement statement = connection.prepareStatement(DOES_COURSE_EXIST_BY_COURSE_NAME)
@@ -124,6 +131,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
 
             try (ResultSet resultSet = statement.executeQuery()) {
                 resultSet.next();
+                logger.trace("Existence of course with a name " + courseName + ": " + resultSet.getBoolean("exists"));
                 return resultSet.getBoolean("exists");
             }
         } catch (SQLException e) {
@@ -132,6 +140,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
     }
 
     public List<Course> getAvailableCoursesToAdd(int studentId) throws DaoException {
+        logger.trace("Searching for courses of student with id=" + studentId + " available to add");
         List<Course> availableCoursesToAdd = new ArrayList<>();
 
         try (
@@ -142,6 +151,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
             statement.setInt(1, studentId);
             try (ResultSet resultSet = statement.executeQuery()) {
 
+                logger.trace("Adding courses of student with id=" + studentId + " available to add to list");
                 while (resultSet.next()) {
                     int courseId = resultSet.getInt("COURSE_ID");
                     String courseName = resultSet.getString("COURSE_NAME");
@@ -153,12 +163,12 @@ public class CourseDao implements GenericDao<Course, Integer> {
             logger.warn("Can't get courses available to add for student with id=" + studentId, e);
             throw new DaoException("Error getting available courses of student to add", e);
         }
-
+        logger.trace("Returning courses of student with id=" + studentId + " available to add");
         return availableCoursesToAdd;
     }
 
     public List<Course> getStudentCourses(int studentId) throws DaoException {
-
+        logger.trace("Searching for courses of student with id=" + studentId);
         List<Course> studentCourses = new ArrayList<>();
 
         try (
@@ -169,7 +179,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
             statement.setInt(1, studentId);
 
             try (ResultSet resultSet = statement.executeQuery()) {
-
+                logger.trace("Adding courses of student with id=" + studentId + " to list");
                 while (resultSet.next()) {
                     int courseId = resultSet.getInt("COURSE_ID");
                     String courseName = resultSet.getString("COURSE_NAME");
@@ -182,6 +192,7 @@ public class CourseDao implements GenericDao<Course, Integer> {
             logger.warn("Can't get courses of student with id =" + studentId, e);
             throw new DaoException("Error getting courses of student ", e);
         }
+        logger.trace("Returning courses of student with id=" + studentId);
         return studentCourses;
     }
 

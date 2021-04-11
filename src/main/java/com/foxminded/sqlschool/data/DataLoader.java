@@ -11,13 +11,15 @@ import java.util.*;
 public class DataLoader {
     private final static Logger logger = Logger.getLogger(DataLoader.class);
 
-    private final int DEFAULT_MIN_GROUP_SIZE = 1;
-    private final int DEFAULT_MAX_GROUP_SIZE = 3;
+    private final int DEFAULT_MIN_GROUP_SIZE = 10;
+    private final int DEFAULT_MAX_GROUP_SIZE = 30;
 
-    private final int DEFAULT_MIN_COURSE_AMOUNT = 1;
-    private final int DEFAULT_MAX_COURSE_AMOUNT = 3;
+    private final int DEFAULT_MIN_COURSE_AMOUNT_STUDENT = 1;
+    private final int DEFAULT_MAX_COURSE_AMOUNT_STUDENT = 3;
 
-    private final int DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT = 20;
+    private final int DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT = 200;
+
+    private final DaoFactory daoFactory = new DaoFactory();
 
     private final DataGenerator dataGenerator;
 
@@ -26,15 +28,17 @@ public class DataLoader {
     }
 
     public void loadTestData() {
+        logger.info("Starting loading test data");
         loadGroups();
         loadStudents();
         loadCourses();
         bindStudentsToCourses();
+        logger.info("Test data loaded successfully");
     }
 
     private void loadGroups() {
-
-        GenericDao<Group, Integer> groupDao = new GroupDao();
+        logger.info("Starting loading groups");
+        GenericDao groupDao = daoFactory.getDao(DaoType.GROUP_DAO);
         String[] groupNames = dataGenerator.getGroupNames();
         for (int i = 0; i < groupNames.length; i++) {
             try {
@@ -43,9 +47,11 @@ public class DataLoader {
                 logger.warn("Can't load group " + groupNames[i] + " to database", e);
             }
         }
+        logger.info("Groups loaded successfully");
     }
 
     private void loadStudents() {
+        logger.info("Starting loading students");
         final Integer[] studentsForDistribution = {DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT};
 
         Map<Group, Integer> groupSizes = getCalculatedGroupSizes();
@@ -57,10 +63,13 @@ public class DataLoader {
         });
 
         insertStudentWithoutGroup(studentsForDistribution[0]);
+        logger.info("Groups loaded successfully");
     }
 
     private void insertStudentToGroups(Map.Entry<Group, Integer> groupStudentsAmount) {
-        GenericDao<Student, Integer> studentDao = new StudentDao();
+        logger.info("Starting inserting students from group "
+            + groupStudentsAmount.getKey().getGroupName() + " to the database");
+        GenericDao studentDao = daoFactory.getDao(DaoType.STUDENT_DAO);
 
         if (groupStudentsAmount.getValue() >= DEFAULT_MIN_GROUP_SIZE && groupStudentsAmount.getValue() <= DEFAULT_MAX_GROUP_SIZE) {
             for (int i = 0; i < groupStudentsAmount.getValue(); i++) {
@@ -76,11 +85,13 @@ public class DataLoader {
                 }
             }
         }
-
+        logger.info("Students from group " + groupStudentsAmount.getKey().getGroupName()
+            + " successfully added to the database");
     }
 
     private void insertStudentWithoutGroup(int distributedStudentsAmount) {
-        GenericDao<Student, Integer> studentDao = new StudentDao();
+        logger.info("Starting inserting students without groups to the database");
+        GenericDao<Student, Integer> studentDao = daoFactory.getDao(DaoType.STUDENT_DAO);
         for (int i = distributedStudentsAmount; i > 0; i--) {
             String firstName = dataGenerator.getRandomFirstName();
             String lastName = dataGenerator.getRandomLastName();
@@ -92,11 +103,13 @@ public class DataLoader {
                     " " + lastName + " to database", e);
             }
         }
+        logger.info("Students with groups successfully added to the database");
     }
 
     private Map<Group, Integer> getCalculatedGroupSizes() {
+        logger.info("Starting calculating sizes of groups");
         Map<Group, Integer> groupSizes = new HashMap<>();
-        GenericDao<Group, Integer> groupDao = new GroupDao();
+        GenericDao<Group, Integer> groupDao = daoFactory.getDao(DaoType.GROUP_DAO);
         List<Group> groupList = null;
         try {
             groupList = groupDao.getAll();
@@ -109,10 +122,11 @@ public class DataLoader {
         for (Group group : groupList) {
             calculateGroupSize(group, groupSizes, distributedStudentsAmount);
         }
+        logger.info("Sizes of groups successfully calculated");
         return groupSizes;
     }
 
-    private void calculateGroupSize(Group group, Map<Group, Integer> groupSizes, int distributedStudentsAmount) {
+    private void calculateGroupSize(Group group, Map<Group, Integer> groupSizes, Integer distributedStudentsAmount) {
         int currentGroupSize = getRandomNumber(DEFAULT_MIN_GROUP_SIZE, DEFAULT_MAX_GROUP_SIZE + 1);
 
         if ((distributedStudentsAmount - currentGroupSize >= DEFAULT_MIN_GROUP_SIZE)) {
@@ -127,20 +141,23 @@ public class DataLoader {
     }
 
     private void loadCourses() {
-        GenericDao<Course, Integer> courseDao = new CourseDao();
+        logger.info("Starting loading courses");
+        GenericDao<Course, Integer> courseDao = daoFactory.getDao(DaoType.COURSE_DAO);
         String[] courses = dataGenerator.getCourses();
-        for (int i = 0; i < courses.length; i++) {
+        for (String course : courses) {
             try {
-                courseDao.insert(new Course(courses[i], courses[i] + " description"));
+                courseDao.insert(new Course(course, course + " description"));
             } catch (DaoException e) {
-                logger.warn("Can't insert course " + courses[i] + " to database", e);
+                logger.warn("Can't insert course " + course + " to database", e);
             }
         }
+        logger.info("Groups loaded successfully");
     }
 
     private void bindStudentsToCourses() {
-        StudentDao studentDao = new StudentDao();
-        GenericDao<Course, Integer> courseDao = new CourseDao();
+        logger.info("Starting binding students to courses");
+        StudentDao studentDao = (StudentDao) daoFactory.getDao(DaoType.STUDENT_DAO);
+        GenericDao<Course, Integer> courseDao = daoFactory.getDao(DaoType.COURSE_DAO);
 
         List<Student> students = null;
         try {
@@ -156,7 +173,7 @@ public class DataLoader {
         }
 
         for (Student student : students) {
-            int coursesAmount = getRandomNumber(DEFAULT_MIN_COURSE_AMOUNT, DEFAULT_MAX_COURSE_AMOUNT + 1);
+            int coursesAmount = getRandomNumber(DEFAULT_MIN_COURSE_AMOUNT_STUDENT, DEFAULT_MAX_COURSE_AMOUNT_STUDENT + 1);
             List<Course> pickedCourses = getRandomCourses(coursesAmount, courses);
             for (Course course : pickedCourses) {
                 try {
@@ -167,6 +184,7 @@ public class DataLoader {
                 }
             }
         }
+        logger.info("Students have successfully bind to courses");
     }
 
     private List<Course> getRandomCourses(int coursesAmount, List<Course> courses) {
@@ -177,7 +195,6 @@ public class DataLoader {
                 pickedCourses.add(courses.get(courseIndex));
             }
         }
-
         return pickedCourses;
     }
 

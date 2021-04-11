@@ -14,8 +14,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DataLoaderTest {
+    private final int DEFAULT_MAX_GROUPS_AMOUNT = 10;
+    private final int DEFAULT_MAX_COURSE_AMOUNT = 10;
 
-    private com.foxminded.sqlschool.data.DataLoader dataLoader;
+    private final int DEFAULT_MIN_GROUP_SIZE = 10;
+    private final int DEFAULT_MAX_GROUP_SIZE = 30;
+
+    private final int DEFAULT_MIN_COURSE_AMOUNT_STUDENT = 1;
+    private final int DEFAULT_MAX_COURSE_AMOUNT_STUDENT = 3;
+
+    private final int DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT = 200;
+
+    private DataLoader dataLoader;
     private SqlScriptExecutor scriptExecutor;
 
     @BeforeEach
@@ -23,7 +33,7 @@ public class DataLoaderTest {
         scriptExecutor = new SqlScriptExecutor(ConnectionBuilder.getConnection());
 
         scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
-        dataLoader = new com.foxminded.sqlschool.data.DataLoader(com.foxminded.sqlschool.data.DataGenerator.getInstance());
+        dataLoader = new DataLoader(DataGenerator.getInstance());
         dataLoader.loadTestData();
 
     }
@@ -43,12 +53,12 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertEquals(200, amountOfStudents);
+        assertEquals(DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT, amountOfStudents);
     }
 
     @Test
     public void whenDataLoaded_thenEveryStudentHasMin1Course() {
-        int minCoursesAmount = 1;
+        int minCoursesAmount = DEFAULT_MIN_COURSE_AMOUNT_STUDENT;
         int minCoursesAmountInTable = 0;
         String countStudentQuery = "select student_id, count(course_id)\n" +
             "from students_courses\n" +
@@ -70,7 +80,7 @@ public class DataLoaderTest {
 
     @Test
     public void whenDataLoaded_thenEveryStudentHasMax3Course() {
-        int maxCoursesAmount = 1;
+        int maxCoursesAmount = DEFAULT_MAX_COURSE_AMOUNT_STUDENT;
         int maxCoursesAmountInTable = 0;
         String countStudentQuery = "select student_id, count(course_id)\n" +
             "from students_courses\n" +
@@ -92,10 +102,11 @@ public class DataLoaderTest {
 
     @Test
     public void whenDataLoaded_thenEveryGroupHasMin10Students() {
-        int minStudentsAllowed = 10;
+        int minStudentsAllowed = DEFAULT_MIN_GROUP_SIZE;
         int minStudentsAmountInGroup = 0;
         String countStudentQuery = "select group_id, count(student_id)\n" +
             "from students\n" +
+            "where group_id is not null\n" +
             "group by group_id\n" +
             "order by count";
         try (
@@ -115,10 +126,11 @@ public class DataLoaderTest {
 
     @Test
     public void whenDataLoaded_thenEveryGroupHasMax30Students() {
-        int maxStudentsAllowed = 30;
+        int maxStudentsAllowed = DEFAULT_MAX_GROUP_SIZE;
         int maxStudentsAmountInGroup = 0;
         String countStudentQuery = "select group_id, count(student_id)\n" +
             "from students\n" +
+            "where group_id is not null\n" +
             "group by group_id\n" +
             "order by count desc";
         try (
@@ -132,12 +144,12 @@ public class DataLoaderTest {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        assertTrue(maxStudentsAmountInGroup >= maxStudentsAllowed);
+        assertTrue(maxStudentsAllowed >= maxStudentsAmountInGroup);
     }
 
     @Test
     public void whenDataLoaded_thenDBHas10Groups() {
-        int requiredGroupAmount = 10;
+        int requiredGroupAmount = DEFAULT_MAX_GROUPS_AMOUNT;
         int groupAmountInDb = 0;
         String countStudentQuery = "select count(*) from groups";
         try (
@@ -156,7 +168,7 @@ public class DataLoaderTest {
 
     @Test
     public void whenDataLoaded_thenDBHas10Courses() {
-        int requiredCourseAmount = 10;
+        int requiredCourseAmount = DEFAULT_MAX_COURSE_AMOUNT;
         int courseAmountInDb = 0;
         String countStudentQuery = "select count(*) from courses";
         try (

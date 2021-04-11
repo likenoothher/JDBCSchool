@@ -15,12 +15,13 @@ public class MenuCommandHandler {
 
     private final ConsolePrinter printer = new ConsolePrinter();
     private final ConsoleReader reader = new ConsoleReader();
+    private final DaoFactory daoFactory = new DaoFactory();
 
     public void findGroupsLessOrEqualAmount() {
         printer.print("Enter limit of group participants: ");
         int participantsLimit = reader.readNumber();
 
-        GroupDao groupDao = new GroupDao();
+        GroupDao groupDao = (GroupDao) daoFactory.getDao(DaoType.GROUP_DAO);
         List<Group> groups = null;
 
         try {
@@ -40,11 +41,11 @@ public class MenuCommandHandler {
 
     public void findCourseParticipants() {
         printer.print("Insert course name:");
-        CourseDao courseDao = new CourseDao();
+        CourseDao courseDao = (CourseDao) daoFactory.getDao(DaoType.COURSE_DAO);
         String courseName = reader.readString();
 
-        if (courseDao.exist(courseName)) {
-            StudentDao studentDao = new StudentDao();
+        if (courseDao.existByName(courseName)) {
+            StudentDao studentDao = (StudentDao) daoFactory.getDao(DaoType.STUDENT_DAO);
 
             List<Student> courseParticipants = null;
 
@@ -73,11 +74,11 @@ public class MenuCommandHandler {
         lastName = lastName.substring(0, 1).toUpperCase() + lastName.substring(1).toLowerCase();
 
         try {
-            new StudentDao().insert(new Student(firstName, lastName));
+            daoFactory.getDao(DaoType.STUDENT_DAO).insert(new Student(firstName, lastName));
             printer.print("Student was successfully added");
         } catch (DaoException e) {
             logger.warn("Error occurred during adding new student " + firstName +
-                " " +lastName + " to the database", e);
+                " " + lastName + " to the database", e);
         }
     }
 
@@ -90,7 +91,7 @@ public class MenuCommandHandler {
                 studentDao.delete(studentId);
                 printer.print("Student with id " + studentId + " was successfully deleted");
             } else {
-                printer.print("Student with " + studentId + " doesn't exist");
+                printer.print("Student with id " + studentId + " doesn't exist");
             }
         } catch (DaoException e) {
             logger.warn("Error occurred during deleting student with id=" + studentId +
@@ -101,13 +102,14 @@ public class MenuCommandHandler {
     public void addStudentToCourse() {
         printer.print("Insert id of student you want to add a course to: ");
         int studentId = reader.readNumber();
-        StudentDao studentDao = new StudentDao();
+        StudentDao studentDao = (StudentDao) daoFactory.getDao(DaoType.STUDENT_DAO);
 
         List<Course> availableCoursesToAdd;
 
         try {
             if (studentDao.getById(studentId).isPresent()) {
-                availableCoursesToAdd = new CourseDao().getAvailableCoursesToAdd(studentId);
+                CourseDao courseDao = (CourseDao) daoFactory.getDao(DaoType.COURSE_DAO);
+                availableCoursesToAdd = courseDao.getAvailableCoursesToAdd(studentId);
 
                 printer.print("Insert course id to add:");
                 availableCoursesToAdd.forEach(course -> printer.print(course.getId() + "." + course.getName()));
@@ -131,9 +133,9 @@ public class MenuCommandHandler {
     public void deleteStudentFromCourse() {
         printer.print("Insert id of student for deleting one of his/her courses: ");
         int studentId = reader.readNumber();
-        CourseDao courseDao = new CourseDao();
+        CourseDao courseDao = (CourseDao) daoFactory.getDao(DaoType.COURSE_DAO);
 
-        List<Course> studentCourses = null;
+        List<Course> studentCourses;
         try {
             studentCourses = courseDao.getStudentCourses(studentId);
 
@@ -142,7 +144,7 @@ public class MenuCommandHandler {
                 studentCourses.forEach(course -> printer.print(course.getId() + "." + course.getName()));
                 int chooseId = reader.readNumber();
                 if (isChooseCourseIdBondCourse(chooseId, studentCourses)) {
-                    StudentDao studentDao = new StudentDao();
+                    StudentDao studentDao = (StudentDao) daoFactory.getDao(DaoType.STUDENT_DAO);
                     studentDao.deleteStudentFromCourse(studentId, chooseId);
                     printer.print("Course was successfully deleted");
                 } else {
@@ -154,7 +156,7 @@ public class MenuCommandHandler {
             }
 
         } catch (DaoException e) {
-            logger.warn("Error occurred during deleting student with id="+ studentId + " from a course", e);
+            logger.warn("Error occurred during deleting student with id=" + studentId + " from a course", e);
         }
     }
 
