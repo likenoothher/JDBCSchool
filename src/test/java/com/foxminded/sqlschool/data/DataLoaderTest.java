@@ -2,7 +2,7 @@ package com.foxminded.sqlschool.data;
 
 import com.foxminded.sqlschool.connection.ConnectionBuilder;
 import com.foxminded.sqlschool.scriptExecutor.SqlScriptExecutor;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -25,15 +25,13 @@ public class DataLoaderTest {
 
     private final int DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT = 200;
 
-    private DataLoader dataLoader;
-    private SqlScriptExecutor scriptExecutor;
 
-    @BeforeEach
-    public void loadData() {
-        scriptExecutor = new SqlScriptExecutor(ConnectionBuilder.getConnection());
+    @BeforeAll
+    static void loadData() {
+        SqlScriptExecutor scriptExecutor = new SqlScriptExecutor(ConnectionBuilder.getConnection());
 
         scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
-        dataLoader = new DataLoader(DataGenerator.getInstance());
+        DataLoader dataLoader = new DataLoader(DataGenerator.getInstance());
         dataLoader.loadTestData();
 
     }

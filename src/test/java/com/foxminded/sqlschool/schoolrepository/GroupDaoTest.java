@@ -4,6 +4,7 @@ import com.foxminded.sqlschool.connection.ConnectionBuilder;
 import com.foxminded.sqlschool.dto.Group;
 import com.foxminded.sqlschool.dto.Student;
 import com.foxminded.sqlschool.scriptExecutor.SqlScriptExecutor;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -20,8 +21,9 @@ public class GroupDaoTest {
     private List<Group> groups;
     private List<Student> students;
 
-    @BeforeEach
-    public void loadData() {
+
+    @Test
+    public void whenGetGroupsWithAMountLessOrEqual_thenReturnGroupList() throws DaoException {
         daoFactory = new DaoFactory();
         scriptExecutor = new SqlScriptExecutor(ConnectionBuilder.getConnection());
         scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
@@ -32,13 +34,9 @@ public class GroupDaoTest {
         groups.add(new Group("group3"));
 
         groupDao = (GroupDao) daoFactory.getDao(DaoType.GROUP_DAO);
-        groups.forEach(group -> {
-            try {
-                groupDao.insert(group);
-            } catch (DaoException e) {
-                e.printStackTrace();
-            }
-        });
+        for(Group student:groups) {
+            groupDao.insert(student);
+        }
 
         students = new ArrayList<>();
         students.add(new Student(1, "firstName1", "lastName1"));
@@ -47,18 +45,10 @@ public class GroupDaoTest {
         students.add(new Student(3, "firstName4", "lastName4"));
 
         studentDao = (StudentDao) daoFactory.getDao(DaoType.STUDENT_DAO);
-        students.forEach(student -> {
-            try {
-                studentDao.insert(student);
-            } catch (DaoException e) {
-                e.printStackTrace();
-            }
-        });
+        for(Student student:students) {
+            studentDao.insert(student);
+        }
 
-    }
-
-    @Test
-    public void whenGetGroupsWithAMountLessOrEqual_thenReturnGroupList() throws DaoException {
         List<Group> groups = groupDao.getGroupsWithAMountLessOrEqual(1);
 
         assertEquals(2, groups.size());

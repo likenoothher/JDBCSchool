@@ -117,27 +117,29 @@ public class DataLoader {
             logger.warn("Can't get all groups from database", e);
         }
 
-        Integer distributedStudentsAmount = DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT;
+        Integer studentsAmountForDistribution = DEFAULT_DISTRIBUTED_STUDENTS_AMOUNT;
 
         for (Group group : groupList) {
-            calculateGroupSize(group, groupSizes, distributedStudentsAmount);
+            int distributedStudents = calculateGroupSize(group, groupSizes, studentsAmountForDistribution);
+            studentsAmountForDistribution -= distributedStudents;
         }
         logger.info("Sizes of groups successfully calculated");
         return groupSizes;
     }
 
-    private void calculateGroupSize(Group group, Map<Group, Integer> groupSizes, Integer distributedStudentsAmount) {
+    private int calculateGroupSize(Group group, Map<Group, Integer> groupSizes, Integer studentsAmountForDistribution) {
+
         int currentGroupSize = getRandomNumber(DEFAULT_MIN_GROUP_SIZE, DEFAULT_MAX_GROUP_SIZE + 1);
 
-        if ((distributedStudentsAmount - currentGroupSize >= DEFAULT_MIN_GROUP_SIZE)) {
+        if ((studentsAmountForDistribution - currentGroupSize >= 0)) {
             groupSizes.put(group, currentGroupSize);
-            distributedStudentsAmount -= currentGroupSize;
-        } else if (distributedStudentsAmount >= DEFAULT_MIN_GROUP_SIZE) {
-            groupSizes.put(group, distributedStudentsAmount);
-            distributedStudentsAmount -= distributedStudentsAmount;
+        } else if (studentsAmountForDistribution >= DEFAULT_MIN_GROUP_SIZE) {
+            groupSizes.put(group, studentsAmountForDistribution);
         } else {
             groupSizes.put(group, 0);
         }
+
+        return currentGroupSize;
     }
 
     private void loadCourses() {

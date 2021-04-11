@@ -55,7 +55,7 @@ public class GenericDAOTest {
         scriptExecutor.executeSQLScript("src\\main\\resources\\createTablesScript.sql");
 
     }
-//
+
 //    @ParameterizedTest
 //    @MethodSource("dataForGetAllMethod")
 //    public void testGetAll(List input, DaoType type) {

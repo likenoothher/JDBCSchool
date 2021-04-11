@@ -4,8 +4,11 @@ import com.foxminded.sqlschool.connection.ConnectionBuilder;
 import com.foxminded.sqlschool.dto.Course;
 import com.foxminded.sqlschool.dto.Student;
 import com.foxminded.sqlschool.scriptExecutor.SqlScriptExecutor;
+
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 
 import java.util.ArrayList;
 import java.util.List;

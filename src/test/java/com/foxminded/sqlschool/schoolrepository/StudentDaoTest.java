@@ -13,7 +13,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class StudentDaoTest {
-    private com.foxminded.sqlschool.scriptExecutor.SqlScriptExecutor scriptExecutor;
+    private SqlScriptExecutor scriptExecutor;
     private DaoFactory daoFactory;
     private CourseDao courseDao;
     private StudentDao studentDao;
